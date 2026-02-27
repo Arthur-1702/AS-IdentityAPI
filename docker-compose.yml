@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: agromonitor-sqlserver
+    environment:
+      SA_PASSWORD: "123@login"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/opt/mssql-tools/bin/sqlcmd",
+          "-S",
+          "localhost",
+          "-U",
+          "fiapas",
+          "-P",
+          "123@login",
+          "-Q",
+          "SELECT 1",
+        ]
+      interval: 10s
+      retries: 10
+      start_period: 30s
+
+  identity-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: identity-service
+    ports:
+      - "5001:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__IdentityDb: "Server=sqlserver,1433;Database=agromonitor-identity;User Id=fiapas;Password=123@login;Encrypt=False;TrustServerCertificate=True;"
+      Jwt__Secret: "dev-secret-key-32chars-minimum-ok!"
+      Jwt__Issuer: "IdentityService"
+      Jwt__Audience: "AgroMonitor"
+      Jwt__ExpiresInMinutes: "1440"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+volumes:
+  sqlserver_data:

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identityapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: identityapi
+  template:
+    metadata:
+      labels:
+        app: identityapi
+    spec:
+      containers:
+        - name: identityapi
+          image: arthur1702/identityapi:latest
+          env:
+            - name: TZ
+              value: "America/Sao_Paulo"
+          ports:
+            - containerPort: 80
