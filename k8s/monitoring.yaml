@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: prometheus-users
+  name: prometheus-identity
   namespace: default
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: prometheus-users
+  name: prometheus-identity
 rules:
   - apiGroups: [""]
     resources:
@@ -29,20 +29,20 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: prometheus-users
+  name: prometheus-identity
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: prometheus-users
+  name: prometheus-identity
 subjects:
   - kind: ServiceAccount
-    name: prometheus-users
+    name: prometheus-identity
     namespace: default
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: prometheus-users-config
+  name: prometheus-identity-config
 data:
   prometheus.yml: |
     global:
@@ -66,18 +66,18 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prometheus-users
+  name: prometheus-identity
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: prometheus-users
+      app: prometheus-identity
   template:
     metadata:
       labels:
-        app: prometheus-users
+        app: prometheus-identity
     spec:
-      serviceAccountName: prometheus-users
+      serviceAccountName: prometheus-identity
       containers:
         - name: prometheus
           image: prom/prometheus:latest
@@ -94,17 +94,17 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: prometheus-users-config
+            name: prometheus-identity-config
         - name: data
           emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus-users-service
+  name: prometheus-identity-service
 spec:
   selector:
-    app: prometheus-users
+    app: prometheus-identity
   ports:
     - protocol: TCP
       port: 9090
@@ -114,16 +114,16 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: grafana-users
+  name: grafana-identity
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: grafana-users
+      app: grafana-identity
   template:
     metadata:
       labels:
-        app: grafana-users
+        app: grafana-identity
     spec:
       containers:
         - name: grafana
@@ -143,10 +143,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: grafana-users-service
+  name: grafana-identity-service
 spec:
   selector:
-    app: grafana-users
+    app: grafana-identity
   ports:
     - protocol: TCP
       port: 3000
